@@ -20,77 +20,50 @@ return {
   {
     { "rubiin/fortune.nvim", config = true },
   },
-  -- }}}
   {
-    "nvimdev/dashboard-nvim",
-    event = "VimEnter",
-    opts = function()
-      local logo = [[
-                            /^--^\     /^--^\     /^--^\           
-                            \____/     \____/     \____/           
-                          /      \   /      \   /      \           
-                         |        | |        | |        |          
-                          \__  __/   \__  __/   \__  __/           
-      |^|^|^|^|^|^|^|^|^|^|^|^\ \^|^|^|^/ /^|^|^|^|^\ \^|^|^|^|^|^|
-      | | | | | | | | | | | | |\ \| | |/ /| | | | | | \ \ | | | | |
-      | | | | | | | | | | | | / / | | |\ \| | | | | |/ /| | | | | |
-      | | | | | | | | | | | | \/| | | | \/| | | | | |\/ | | | | | |
-      #############################################################
-      | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
-      | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
-    ]]
-
-      logo = string.rep("\n", 8) .. logo .. "\n\n"
-
-      local opts = {
-        theme = "doom",
-        hide = {
-          -- this is taken care of by lualine
-          -- enabling this messes up the actual laststatus setting after loading a file
-          statusline = false,
-        },
-        config = {
-          header = vim.split(logo, "\n"),
+    { "mason-org/mason.nvim", version = "1.11.0" },
+    { "mason-org/mason-lspconfig.nvim", version = "1.32.0" },
+  },
+  {
+    "vhyrro/luarocks.nvim",
+    priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
+    config = true,
+  },
+  {
+    "snacks.nvim",
+    opts = {
+      dashboard = {
+        preset = {
+          pick = function(cmd, opts)
+            return LazyVim.pick(cmd, opts)()
+          end,
+          header = [[
+    ▄████▄   ██▀███   ██▓ ███▄ ▄███▓  ██████  ▒█████   ███▄    █ 
+    ▒██▀ ▀█  ▓██ ▒ ██▒▓██▒▓██▒▀█▀ ██▒▒██    ▒ ▒██▒  ██▒ ██ ▀█   █ 
+    ▒▓█    ▄ ▓██ ░▄█ ▒▒██▒▓██    ▓██░░ ▓██▄   ▒██░  ██▒▓██  ▀█ ██▒
+    ▒▓▓▄ ▄██▒▒██▀▀█▄  ░██░▒██    ▒██   ▒   ██▒▒██   ██░▓██▒  ▐▌██▒
+    ▒ ▓███▀ ░░██▓ ▒██▒░██░▒██▒   ░██▒▒██████▒▒░ ████▓▒░▒██░   ▓██░
+    ░ ░▒ ▒  ░░ ▒▓ ░▒▓░░▓  ░ ▒░   ░  ░▒ ▒▓▒ ▒ ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒ 
+      ░  ▒     ░▒ ░ ▒░ ▒ ░░  ░      ░░ ░▒  ░ ░  ░ ▒ ▒░ ░ ░░   ░ ▒░
+    ░          ░░   ░  ▒ ░░      ░   ░  ░  ░  ░ ░ ░ ▒     ░   ░ ░ 
+    ░ ░         ░      ░         ░         ░      ░ ░           ░ 
+    ░                                                             
+]],
         -- stylua: ignore
-        center = {
-          { action = LazyVim.telescope("files"),                                    desc = " Find File",       icon = " ", key = "f" },
-          { action = "ene | startinsert",                                        desc = " New File",        icon = " ", key = "n" },
-          { action = "Telescope oldfiles",                                       desc = " Recent Files",    icon = " ", key = "r" },
-          { action = "Telescope live_grep",                                      desc = " Find Text",       icon = " ", key = "g" },
-          { action = [[lua LazyVim.telescope.config_files()()]], desc = " Config",          icon = " ", key = "c" },
-          { action = 'lua require("persistence").load()',                        desc = " Restore Session", icon = " ", key = "s" },
-          { action = "LazyExtras",                                               desc = " Lazy Extras",     icon = " ", key = "x" },
-          { action = "Lazy",                                                     desc = " Lazy",            icon = "󰒲 ", key = "l" },
-          { action = "qa",                                                       desc = " Quit",            icon = " ", key = "q" },
+        ---@type snacks.dashboard.Item[]
+        keys = {
+          { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
+          { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
+          { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
+          { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
+          { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
+          { icon = " ", key = "s", desc = "Restore Session", section = "session" },
+          { icon = " ", key = "x", desc = "Lazy Extras", action = ":LazyExtras" },
+          { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
+          { icon = " ", key = "q", desc = "Quit", action = ":qa" },
         },
-          footer = function()
-            local fortune = require("fortune").get_fortune()
-            local stats = require("lazy").stats()
-            local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
-            local info = { "⚡ Neovim loaded " .. stats.loaded .. "/" .. stats.count .. " plugins in " .. ms .. "ms" }
-            local footer = vim.list_extend(info, fortune)
-            return footer
-          end,
         },
-      }
-
-      for _, button in ipairs(opts.config.center) do
-        button.desc = button.desc .. string.rep(" ", 43 - #button.desc)
-        button.key_format = "  %s"
-      end
-
-      -- close Lazy and re-open when the dashboard is ready
-      if vim.o.filetype == "lazy" then
-        vim.cmd.close()
-        vim.api.nvim_create_autocmd("User", {
-          pattern = "DashboardLoaded",
-          callback = function()
-            require("lazy").show()
-          end,
-        })
-      end
-
-      return opts
-    end,
+      },
+    },
   },
 }
